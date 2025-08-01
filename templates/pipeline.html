@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedSearch - Processing Pipeline</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        }
+        
+        body {
+            background-color: #fff;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+        
+        .logo-icon {
+            color: #09877e;
+            margin-right: 0.5rem;
+            font-size: 1.5rem;
+        }
+        
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #09877e;
+        }
+        
+        .nav {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .nav-link {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .title {
+            font-size: 2rem;
+            color: #09877e;
+            margin-bottom: 1.5rem;
+        }
+        
+        .subtitle {
+            color: #555;
+            margin-bottom: 2rem;
+        }
+        
+        .pipeline-container {
+            background-color: #f8f9fa;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+        }
+        
+        .pipeline {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .pipeline-row {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        
+        .pipeline-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 1rem;
+        }
+        
+        .pipeline-arrow {
+            color: #09877e;
+            font-size: 1.5rem;
+            margin: 0.5rem 0;
+        }
+        
+        .pipeline-blue-arrow {
+            color: #4285f4;
+            font-size: 1.5rem;
+            margin: 0.5rem 0;
+        }
+        
+        .pipeline-box {
+            border: 2px solid #09877e;
+            border-radius: 8px;
+            padding: 1rem;
+            width: 300px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pipeline-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(9, 135, 126, 0.2);
+            border-color: #066d63;
+        }
+
+        .pipeline-blue-box {
+            border: 2px solid #4285f4;
+            border-radius: 8px;
+            padding: 1rem;
+            width: 300px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pipeline-blue-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.2);
+            border-color: #1a73e8;
+        }
+
+        .pipeline-divider {
+            height: 2px;
+            background: linear-gradient(to right, #09877e, #4285f4);
+            width: 60%;
+            margin: 2rem 0;
+        }
+
+        .pipeline-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px solid #09877e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .pipeline-blue-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px solid #4285f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .purple-dots {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+        }
+
+        .purple-dot {
+            width: 12px;
+            height: 12px;
+            background-color: #9c27b0;
+            border-radius: 50%;
+            margin: 3px;
+        }
+
+        .query-icon {
+            color: #4285f4;
+            font-size: 2rem;
+        }
+
+        .box-title {
+            font-weight: 600;
+            color: #09877e;
+            margin-bottom: 0.5rem;
+        }
+
+        .blue-title {
+            font-weight: 600;
+            color: #4285f4;
+            margin-bottom: 0.5rem;
+        }
+
+        .box-description {
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 20px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #09877e, #4285f4);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .close {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .close:hover {
+            opacity: 0.7;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .typewriter-text {
+            font-size: 1rem;
+            line-height: 1.8;
+            color: #333;
+            min-height: 100px;
+        }
+
+        .cursor {
+            display: inline-block;
+            background-color: #09877e;
+            width: 2px;
+            height: 1.2em;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            background-color: #f8f9fa;
+            border-radius: 0 0 20px 20px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .modal-footer-text {
+            color: #666;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        #footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+            font-size: 14px;
+            border-top: 1px solid #ccc;
+            margin-top: 100px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+    <header class="header">
+        <a href="accueill.html" class="logo">
+            <span class="logo-icon">❤</span>
+            <span class="logo-text">MedSearch</span>
+        </a>
+        <nav class="nav">
+            <a href="accueill.html" class="nav-link">Home</a>
+            <a href="datapage.html" class="nav-link">Data Sources</a>
+            <a href="pipeline.html" class="nav-link">Pipeline</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1 class="title">Processing Pipeline</h1>
+        <p class="subtitle">
+            Our medical knowledge graph processing pipeline consists of several key stages that transform raw medical data into a queryable
+            knowledge base. Click on each step to learn more about the process.
+        </p>
+
+        <div class="pipeline-container">
+            <div class="pipeline">
+                <div class="pipeline-row">
+                    <div class="pipeline-item">
+                        <div class="pipeline-circle">
+                            <div class="purple-dots">
+                                <div class="purple-dot"></div>
+                                <div class="purple-dot"></div>
+                                <div class="purple-dot"></div>
+                                <div class="purple-dot"></div>
+                                <div class="purple-dot"></div>
+                                <div class="purple-dot"></div>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.9rem; color: #4285f4; font-weight: 500; text-align: center;">knowledge base </div>
+                    </div>
+                    <div class="pipeline-item" style="margin-left: 20rem;">
+                        <div class="pipeline-blue-circle">
+                            <span class="query-icon">Q</span>
+                        </div>
+                        <div style="font-size: 0.9rem; color: #4285f4; font-weight: 500; text-align: center;">User Query</div>
+                    </div>
+                </div>
+
+                <div class="pipeline-row">
+                    <div class="pipeline-item">
+                        <div class="pipeline-arrow">↓</div>
+                    </div>
+                    <div class="pipeline-item" style="margin-left: 25rem;">
+                        <div class="pipeline-blue-arrow">↓</div>
+                    </div>
+                </div>
+
+                <div class="pipeline-row">
+                    <div class="pipeline-item">
+                        <div class="pipeline-box" onclick="openModal('preprocessing-kb')">
+                            <div class="box-title">Preprocessing</div>
+                            <div class="box-description">Cleaning and structuring the knowledge base</div>
+                        </div>
+                    </div>
+                    <div class="pipeline-item" style="margin-left: 10rem;">
+                        <div class="pipeline-blue-box" onclick="openModal('preprocessing-query')">
+                            <div class="blue-title">Preprocessing</div>
+                            <div class="box-description">Cleaning and structuring the user query</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pipeline-row">
+                    <div class="pipeline-item">
+                        <div class="pipeline-arrow">↓</div>
+                    </div>
+                    <div class="pipeline-item" style="margin-left: 25rem;">
+                        <div class="pipeline-blue-arrow">↓</div>
+                    </div>
+                </div>
+
+                <div class="pipeline-row">
+                    <div class="pipeline-item">
+                        <div class="pipeline-box" onclick="openModal('indexing-kb')">
+                            <div class="box-title">Indexing</div>
+                            <div class="box-description">Transforming the knowledge base into embeddings</div>
+                        </div>
+                    </div>
+                    <div class="pipeline-item" style="margin-left: 10rem;">
+                        <div class="pipeline-blue-box" onclick="openModal('indexing-query')">
+                            <div class="blue-title">Indexing</div>
+                            <div class="box-description">Converting the user query into an embedding</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pipeline-row" style="margin-right: 25rem;">
+                    <div class="pipeline-item">
+                        <div class="pipeline-arrow">↓</div>
+                    </div>
+                </div>
+
+                <div class="pipeline-row" style="margin-right: 30rem;">
+                    <div class="pipeline-item">
+                        <div class="pipeline-box" onclick="openModal('enrichment')">
+                            <div class="box-title">Enrichment</div>
+                            <div class="box-description">Enhancing embeddings using RGCN</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pipeline-divider"></div>
+
+                <div class="pipeline-arrow">↓</div>
+
+                <div class="pipeline-box" style="margin: 1rem 0;" onclick="openModal('mapping')">
+                    <div class="box-title">Mapping</div>
+                    <div class="box-description">Matching queries with knowledge base using HNSW similarity search</div>
+                </div>
+
+                <div class="pipeline-arrow">↓</div>
+
+                <div class="pipeline-box" style="margin: 1rem 0;" onclick="openModal('ranking')">
+                    <div class="box-title">Ranking & Retrieval</div>
+                    <div class="box-description">Searching for the best matching entities</div>
+                </div>
+
+                <div class="pipeline-arrow">↓</div>
+
+                <div class="pipeline-box" style="margin: 1rem 0;" onclick="openModal('interaction')">
+                    <div class="box-title">User Interaction</div>
+                    <div class="box-description">Displaying and refining results</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title" class="modal-title"></h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="typewriter-text" class="typewriter-text"></div>
+            </div>
+            <div class="modal-footer">
+                <p class="modal-footer-text">Cliquez n'importe où pour fermer</p>
+            </div>
+        </div>
+    </div>
+
+    <footer id="footer">
+        <p><strong>Ikram Djait & Sarah Zerrai</strong></p>
+        <p>Projet :  Improving Medical Information
+Retrieval via Knowledge
+Graph-Enhanced Graph Neural
+Networks</p>
+        <p>Université de Saad dahleb Département Informatique</p>
+        <p>© 2025 | Soutenance académique</p>
+        <p>
+            <a href="https://github.com/ikraming/projetfindetude" target="_blank" style="color: rgb(8, 7, 7); text-decoration: none;">
+                <i class="fab fa-github" style="font-size: 24px;"></i> GitHub
+            </a>
+        </p>
+    </footer>
+
+    <script>
+        // Contenu détaillé pour chaque étape
+        const modalContent = {
+            'preprocessing-kb': {
+                title: 'Preprocessing - Knowledge Base',
+                text: 'Hello! Let me walk you through the preprocessing step of our medical knowledge base.\n' +
+                    '\n' +
+                    'This phase is essential, as it transforms raw RDF data into a clean, structured knowledge graph, ready to be vectorized using RDF2Vec. Here are the key steps:\n' +
+                    '\n' +
+                    '🔍 Loading multiple data sources: We begin by importing several .nt files containing RDF triples and combine them into a unified knowledge graph. Missing files are ignored, and memory is periodically cleared to maintain optimal performance.\n' +
+                    '\n' +
+                    '🔧 Triple cleaning: Each triple is checked to ensure it is valid—that is, it must contain a well-formed subject, predicate, and object. Incomplete or corrupted triples are automatically discarded.\n' +
+                    '\n' +
+                    '🔄 Duplicate removal: To guarantee information uniqueness in the graph, identical triples are removed.\n' +
+                    '\n' +
+                    '📊 Statistics and validation: After cleaning, we compute statistics on the number of unique subjects, predicates, and objects. We also ensure that all triples comply with RDF standards: valid URIs, correctly formatted literals, etc.\n' +
+                    '\n' +
+                    '✅ Ready for embedding: At the end of this process, we obtain a clean and optimized graph, ready to be transformed into vector representations using RDF2Vec.' },
+            'preprocessing-query': {
+                title: 'Preprocessing - User Query',
+                text: 'Hi! Let me explain how we process your medical query.\n' +
+                    'When you ask a question, our system follows several steps to prepare and understand it as best as possible:\n' +
+                    '\n' +
+                    '🧹 Text cleaning\n' +
+                    'We remove unnecessary words, correct common typos, and normalize casing to obtain a clean and consistent text.\n' +
+                    '\n' +
+                    '🔤 Tokenization\n' +
+                    'The query is broken down into smaller units (tokens) to facilitate analysis.\n' +
+                    '\n' +
+                    '🏥 Medical term identification\n' +
+                    'We automatically detect medical terms present in the query, such as symptoms, diseases, treatments, or specific identifiers.\n' +
+                    '\n' +
+                    '📝 Normalization\n' +
+                    'The identified medical terms are converted into their standardized forms to facilitate matching with our knowledge base.\n' +
+                    '\n' +
+                    '🎯 Intent determination\n' +
+                    'We analyze the overall meaning of the query to understand exactly what you are looking for (e.g., a description, a list, a treatment, etc.).\n' +
+                    '\n' +
+                    '🏷️ Entity type identification\n' +
+                    'We specify which types of entities or information the query concerns.\n' +
+                    '\n' +
+                    '📋 Analysis summary\n' +
+                    'Finally, the system gathers all this information to precisely target the data to search for in our database and provide a relevant response.\n' +
+                    '\n' +
+                    'This careful preparation ensures a fine understanding of your request and improves the relevance of the results we return to you.'},
+            'indexing-kb': {
+                title: 'Indexing - Knowledge Base',
+                text: 'Excellent! Let’s now talk about the indexing of our medical knowledge base.\n' +
+                    '\n' +
+                    'This step transforms our structured database into numerical representations that the computer can efficiently process:\n' +
+                    '\n' +
+                    '🧠 Embedding creation: Each medical entity (disease, symptom, treatment) is converted into a high-dimensional numerical vector that captures its semantic meaning.\n' +
+                    '\n' +
+                    '🔗 Preserving relationships: Connections between medical entities are maintained within these vector representations.\n' +
+                    '\n' +
+                    '📈 Dimensionality optimization: We use advanced techniques to reduce complexity while preserving essential medical information.\n' +
+                    '\n' +
+                    '🗃️ Structuring for search: The embeddings are organized into a data structure optimized for fast and accurate retrieval.\n' +
+                    '\n' +
+                    '⚡ Continuous updating: Our index is regularly updated with new medical knowledge to stay current.\n' +
+                    '\n' +
+                    'This indexing enables ultra-fast searches within our vast medical knowledge base.'},
+            'indexing-query': {
+                title: 'Indexing - User Query',
+                text: 'Perfect! Let’s see how we transform your question into a numerical format.\n' +
+                    '\n' +
+                    'Your medical query goes through a transformation process similar to our knowledge base:\n' +
+                    '\n' +
+                    '🔢 Vectorization: Your preprocessed question is converted into a numerical vector with the same dimensions as those used in our knowledge base.\n' +
+                    '\n' +
+                    '🎯 Semantic alignment: We ensure that the query vector lies in the same vector space as our knowledge graph embeddings.\n' +
+                    '\n' +
+                    '🔍 Context capture: The embedding captures not just the individual words, but also their medical context.\n' +
+                    '\n' +
+                    '⚖️ Intelligent weighting: Key medical terms are given more importance within the vector representation.\n' +
+                    '\n' +
+                    '🎪 Prepared for comparison: The final vector is optimized for efficient comparison with the embeddings in our knowledge base.\n' +
+                    '\n' +
+                    'This transformation enables accurate semantic search, rather than relying on simple keyword matching.'},
+            'enrichment': {
+                title: 'Enrichment with RGCN',
+                text: `Fantastic! Let me explain our enrichment step with RGCNs (Relational Graph Convolutional Networks).
+
+This phase is the innovative core of our system:
+
+🕸️ Relational Graph Convolutional Network: RGCNs analyze the complex relationships between medical entities in our knowledge graph.
+
+🧠 Pattern Learning: The network automatically learns hidden patterns within medical relationships (for example, how certain symptoms are linked to specific diseases).
+
+🔄 Information Propagation: Information flows through the graph, enriching each node with the context of its medical neighbors.
+
+💡 Intelligent Inference: The system can now infer relationships that were not explicitly coded in the original data.
+
+⚡ Enhanced Embeddings: The vector representations are significantly improved with this contextual knowledge.
+
+This revolutionary approach enables our system to understand the subtleties of medical relationships just like an expert would.`
+            },
+            'mapping': {
+                title: 'Mapping with HNSW',
+                text: 'Excellent! Let’s talk about our mapping system powered by the HNSW algorithm (Hierarchical Navigable Small World).\n' +
+                    '\n' +
+                    'This crucial step connects your question to our knowledge base:\n' +
+                    '\n' +
+                    '🗺️ Similarity search: HNSW compares your vectorized query with all the enriched embeddings in our knowledge base.\n' +
+                    '\n' +
+                    '⚡ Ultra-fast retrieval: The HNSW algorithm enables logarithmic-time search, even across millions of medical entities.\n' +
+                    '\n' +
+                    '🎯 Semantic matching: We identify the medical entities that are most semantically relevant to your question—not just lexically similar ones.\n' +
+                    '\n' +
+                    '📊 Scoring system: Each match is assigned a similarity score based on vector distance.\n' +
+                    '\n' +
+                    '🔗 Hierarchical navigation: HNSW uses a multi-level structure to efficiently navigate the medical knowledge space.\n' +
+                    '\n' +
+                    'This technology ensures we deliver the most relevant medical information in just milliseconds.'},
+            'ranking': {
+                title: 'Ranking & Retrieval',
+                text: 'Perfect! Let’s now explore how we rank and retrieve the best results for you.\n' +
+                    '\n' +
+                    'This final step refines our selection: Identification of the most relevant entity\n' +
+                    'The HNSW algorithm analyzed semantic similarity and selected the entity closest to your query.\n' +
+                    '🏆 Selected entity: [entity identifier or URI] (score: [value])\n' +
+                    '\n' +
+                    '📥 Extraction of associated information\n' +
+                    'Data linked to this entity has been extracted to better understand its context and relationships within the graph.\n' +
+                    '\n' +
+                    '📋 Analysis of relationships\n' +
+                    'We identified:\n' +
+                    '\n' +
+                    'Descriptive properties (name, description, etc.)\n' +
+                    '\n' +
+                    'Interactions or links with other relevant entities (associations, effects, etc.)\n' +
+                    '\n' +
+                    '🔎 Entity type detection\n' +
+                    'A targeted extraction retrieved specific attributes corresponding to the detected entity type.\n' +
+                    '\n' +
+                    '🧠 Answering the user’s query\n' +
+                    'Your query was interpreted to extract and synthesize the most relevant information available.\n' +
+                    '\n' +
+                    '🔄 Continuous improvement mechanism\n' +
+                    'The system adjusts its models with each interaction to progressively enhance the quality and relevance of the results provided.'},
+            'interaction': {
+                title: 'User Interaction',
+                text: 'Wonderful! Let’s explore the final step: your interaction with the results.\n' +
+                    '\n' +
+                    'This phase puts the user at the center of the system:\n' +
+                    '\n' +
+                    '🖥️ Intuitive interface: Results are displayed in a clear, user-friendly interface designed for both healthcare professionals and patients.\n' +
+                    '\n' +
+                    '🔍 Interactive exploration: You can explore relationships between medical entities and visualize their connections within the knowledge graph.\n' +
+                    '\n' +
+                    '💬 Query refinement: The system allows you to refine your search with follow-up questions or additional details.\n' +
+                    '\n' +
+                    'This interaction transforms a simple search into a truly collaborative exploration of medical knowledge.' }
+        };
+
+        let typewriterInterval;
+        let isTyping = false;
+
+        function openModal(contentKey) {
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modal-title');
+            const typewriterText = document.getElementById('typewriter-text');
+
+            const content = modalContent[contentKey];
+
+            modalTitle.textContent = content.title;
+            typewriterText.innerHTML = '';
+
+            modal.style.display = 'block';
+
+            // Démarrer l'effet de frappe après un petit délai
+            setTimeout(() => {
+                typewriterEffect(content.text, typewriterText);
+            }, 300);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.style.display = 'none';
+
+            // Arrêter l'effet de frappe
+            if (typewriterInterval) {
+                clearInterval(typewriterInterval);
+            }
+            isTyping = false;
+        }
+
+        function typewriterEffect(text, element) {
+            let index = 0;
+            isTyping = true;
+            element.innerHTML = '<span class="cursor"></span>';
+
+            typewriterInterval = setInterval(() => {
+                if (index < text.length) {
+                    if (text[index] === '\n') {
+                        element.innerHTML = element.innerHTML.replace('<span class="cursor"></span>', '<br><span class="cursor"></span>');
+                    } else {
+                        element.innerHTML = element.innerHTML.replace('<span class="cursor"></span>', text[index] + '<span class="cursor"></span>');
+                    }
+                    index++;
+                } else {
+                    // Garder le curseur qui clignote à la fin
+                    isTyping = false;
+                    clearInterval(typewriterInterval);
+                }
+            }, 30); // Vitesse de frappe (30ms entre chaque caractère)
+        }
+
+        // Fermer la modal en cliquant en dehors
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Fermer avec la touche Escape
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

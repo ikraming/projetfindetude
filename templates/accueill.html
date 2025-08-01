@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedSearch - Medical Knowledge Graph Search</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        }
+
+        body {
+            background-color: #fff;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            color: #09877e;
+            margin-right: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #09877e;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            color: #09877e;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            color: #09877e;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .search-box {
+            display: flex;
+            margin: 0 auto 3rem;
+            max-width: 800px;
+        }
+
+        .search-input {
+            flex-grow: 1;
+            padding: 1rem;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-right: none;
+            border-radius: 4px 0 0 4px;
+        }
+
+        .search-button {
+            background-color: #09877e;
+            border: none;
+            color: white;
+            padding: 1rem;
+            cursor: pointer;
+            border-radius: 0 4px 4px 0;
+            min-width: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-button:hover {
+            background-color: #076a61;
+        }
+
+        .search-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            color: #09877e;
+            margin-bottom: 1.5rem;
+            margin-left: 50px;
+        }
+
+        .card {
+            background-color: #ffffffab;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow:
+                0 3px 3px rgba(0, 0, 0, 0.1),
+                0 -3px 3px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            display: flex;
+            width: 1000px;
+            height: 400px;
+            margin-left: 50px;
+        }
+
+        .card-content {
+            flex: 1;
+        }
+
+        .card-image {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffffff;
+            border-radius: 4px;
+            margin-left: 2rem;
+        }
+
+        .card p {
+            margin-bottom: 1rem;
+            line-height: 1.7;
+        }
+
+        .results-message {
+            text-align: center;
+            color: #666;
+            font-size: 1.1rem;
+            padding: 2rem;
+        }
+
+        .search-icon {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        .loading {
+            display: none;
+            margin: 20px 0;
+            color: #667eea;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .results {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            text-align: left;
+            display: none;
+            border-left: 4px solid #667eea;
+        }
+
+        .results h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .results p {
+            color: #5a6c7d;
+            line-height: 1.6;
+            font-size: 1.05em;
+        }
+
+        .error {
+            background: #ffe6e6;
+            border-left-color: #e74c3c;
+            color: #c0392b;
+        }
+
+        .status-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #09877e;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ffc107;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.ready {
+            background: #28a745;
+            animation: none;
+        }
+
+        .status-dot.loading {
+            background: #ffc107;
+        }
+
+        .status-dot.error {
+            background: #dc3545;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .progress-text {
+            font-size: 14px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .examples {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .examples h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .example-query {
+            background: #e8f2ff;
+            padding: 12px 15px;
+            margin: 8px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 3px solid #09877e;
+        }
+
+        .example-query:hover {
+            background: #d6e8ff;
+            transform: translateX(5px);
+        }
+
+        .example-query code {
+            color: #2c3e50;
+            font-family: 'Courier New', monospace;
+        }
+
+        .result-item {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-query {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .result-response {
+            color: #5a6c7d;
+            line-height: 1.6;
+        }
+
+
+
+
+
+.containers {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #ffffff;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid #4a5568;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-loading {
+            background: #fbbf24;
+        }
+
+        .status-ready {
+            background: #10b981;
+        }
+
+        .status-error {
+            background: #ef4444;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .logs-container {
+            height: 500px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #1a202c;
+            scrollbar-width: thin;
+            scrollbar-color: #4a5568 #1a202c;
+        }
+
+        .logs-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .logs-container::-webkit-scrollbar-track {
+            background: #1a202c;
+        }
+
+        .logs-container::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 4px;
+        }
+
+        .log-entry {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .log-entry:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .log-timestamp {
+            color: #9ca3af;
+            margin-right: 12px;
+            font-size: 12px;
+            min-width: 70px;
+        }
+
+        .log-message {
+            flex: 1;
+            line-height: 1.4;
+        }
+
+        .log-info {
+            color: #93c5fd;
+        }
+
+        .log-success {
+            color: #86efac;
+        }
+
+        .log-warning {
+            color: #fbbf24;
+        }
+
+        .log-error {
+            color: #fca5a5;
+        }
+
+        .log-progress {
+            color: #a78bfa;
+        }
+
+        .controls {
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .auto-scroll {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .connection-status {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+
+
+        #footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #f8f9fa;
+    color: #333;
+    font-size: 14px;
+    border-top: 1px solid #ccc;
+    margin-top: 100px;
+  }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+    <header class="header">
+        <a href="accueill.html" class="logo">
+            <span class="logo-icon">❤</span>
+            <span class="logo-text">MedSearch</span>
+        </a>
+        <nav class="nav">
+            <a href="accueill.html" class="nav-link">Home</a>
+            <a href="datapage.html" class="nav-link">Data Sources</a>
+            <a href="pipeline.html" class="nav-link">Pipeline</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1 class="title">Medical Knowledge Graph Search</h1>
+
+        <div class="status-container">
+            <div class="status-indicator">
+                <div id="statusDot" class="status-dot loading"></div>
+                <strong id="statusText">Checking status...</strong>
+            </div>
+            <div id="progressText" class="progress-text">Initialization in progress...</div>
+        </div>
+
+        <div class="search-box">
+            <input type="text" class="search-input" id="queryInput" placeholder="Search medical knowledge graph...">
+            <button class="search-button" id="searchBtn" onclick="performSearch()" disabled>
+                <!-- Icône SVG intégrée -->
+                <svg class="search-icon" viewBox="0 0 24 24">
+                    <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="loading" id="loading">
+            🔍 Searching knowledge graph...
+        </div>
+
+        <div id="results" class="results-message">
+            Enter a medical term, condition, or code in the search bar above to see results.
+        </div>
+
+        <div class="examples">
+            <h4>💡 Example Queries:</h4>
+            <div class="example-query" onclick="searchExample('what is the categorie of disease of the icd code 432.1 ?')">
+                <code>what is the categorie of disease of the icd code 432.1 ?</code>
+            </div>
+            <div class="example-query" onclick="searchExample('what is the name of the drug with ID DB00530?')">
+                <code>what is the name of the drug with ID DB00530?</code>
+            </div>
+            <div class="example-query" onclick="searchExample('Could you tell me more about the drug identified as DB09153 in DrugBank?')">
+                <code>Could you tell me more about the drug identified as DB09153 in DrugBank?</code>
+            </div>
+            <div class="example-query" onclick="searchExample('does methimazole interact with rotavirus vaccine?')">
+                <code>does methimazole interact with rotavirus vaccine?</code>
+            </div>
+        </div>
+
+        <section>
+            <h2 class="section-title">Project Objective</h2>
+            <div class="card">
+                <div class="card-content">
+                    <p>This medical research interface aims to provide healthcare professionals and researchers with a powerful tool to query and explore medical knowledge graphs. By leveraging advanced graph embedding techniques and relational graph convolutional networks (RGCN), our system enables semantic search across multiple medical datasets.</p>
+                    <p>The platform integrates data from PDD Graph, DrugBank, and ICD-9-CM ontology to create a comprehensive knowledge base for medical entity discovery and relationship exploration.</p>
+                </div>
+                <div class="card-image">
+                     <img src="/static/OIP.jpg" alt="Medical Knowledge Graph">
+                </div>
+            </div>
+        </section>
+    </div>
+<div class="containers">
+        <div class="header">
+            <h1>🔧 Log Console – Model Initialization</h1>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-indicator">
+                 <div class="status-dot status-loading" id="connectionStatusDot"></div>
+             <span id="connectionStatusText">Initialization...</span>
+            </div>
+
+            <div class="stats">
+                <span id="connectionStatus" class="connection-status">🔌 Connexion...</span>
+                <span>Logs: <span id="logCount">0</span></span>
+                <span>Last update: <span id="lastUpdate">-</span></span>
+            </div>
+        </div>
+
+        <div class="logs-container" id="logsContainer">
+            <div class="log-entry log-info">
+                <span class="log-timestamp">--:--:--</span>
+                <span class="log-message">🚀 Starting the system...</span>
+            </div>
+        </div>
+
+        <div class="controls">
+
+            <button class="btn btn-secondary" onclick="clearLogs()">🗑️ Clear</button>
+
+        </div>
+    </div>
+
+ <footer id="footer">
+            <p><strong>Ikram Djait & Sarah Zerrai</strong></p>
+            <p>Projet :  Improving Medical Information
+Retrieval via Knowledge
+Graph-Enhanced Graph Neural
+Networks</p>
+            <p>Université de Saad dahleb Département Informatique</p>
+            <p>© 2025 | Soutenance académique</p>
+            <p>
+                <a href="https://github.com/ikraming/projetfindetude" target="_blank" style="color: rgb(8, 7, 7); text-decoration: none;">
+                    <i class="fab fa-github" style="font-size: 24px;"></i> GitHub
+                </a>
+            </p>
+        </footer>
+    <script>
+        let modelsReady = false;
+
+        // Vérifier le statut des modèles au chargement
+        window.onload = function() {
+            checkStatus();
+            // Vérifier le statut toutes les 5 secondes si les modèles ne sont pas prêts
+            setInterval(function() {
+                if (!modelsReady) {
+                    checkStatus();
+                }
+            }, 5000);
+        };
+
+        async function checkStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+                const progressText = document.getElementById('progressText');
+                const queryInput = document.getElementById('queryInput');
+                const searchBtn = document.getElementById('searchBtn');
+
+                if (data.models_loaded) {
+                    statusDot.className = 'status-dot ready';
+                    statusText.textContent = '✅ Models ready';
+                    progressText.textContent = 'You can now perform searches';
+                    queryInput.disabled = false;
+                    searchBtn.disabled = false;
+                    modelsReady = true;
+                } else if (data.models_loading) {
+                    statusDot.className = 'status-dot loading';
+                    statusText.textContent = '⏳ Loading models..';
+                    progressText.textContent = data.progress || 'Initialization in progress..';
+                    queryInput.disabled = true;
+                    searchBtn.disabled = true;
+                } else {
+                    statusDot.className = 'status-dot error';
+                    statusText.textContent = '❌ Models not initialized';
+                    progressText.textContent = 'Loading error';
+                    queryInput.disabled = true;
+                    searchBtn.disabled = true;
+                }
+            } catch (error) {
+                console.error('Error while checking status.:', error);
+            }
+        }
+
+        function setQuery(query) {
+            if (!modelsReady) {
+                alert('Please wait until the models are loaded');
+                return;
+            }
+            document.getElementById('queryInput').value = query;
+        }
+
+        async function performSearch() {
+            const query = document.getElementById('queryInput').value.trim();
+            const resultsDiv = document.getElementById('results');
+
+            if (!query) {
+                alert('Please enter a query');
+                return;
+            }
+
+            // Afficher le chargement
+            resultsDiv.innerHTML = '<div class="loading" style="display: block;">🔍 Search in progress...</div>';
+
+            try {
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query: query })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    if (data.status === 'loading') {
+                        resultsDiv.innerHTML = `
+                            <div class="result-item error">
+                                ⏳The models are still being loaded.<br>
+                                Statut: ${data.progress}<br>
+                                Please wait a few minutes...
+                            </div>
+                        `;
+                    } else {
+                        resultsDiv.innerHTML = `<div class="result-item error">❌ ${data.error}</div>`;
+                    }
+                } else if (data.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="result-item">
+                            <div class="result-query">🔍  Query: ${data.query}</div>
+                            <div class="result-response">📝 Response: ${data.response}</div>
+                            ${data.entities_found ? `<div style="margin-top: 10px; font-size: 12px; color: #666;">🎯 Entities found: ${data.entities_found}</div>` : ''}
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="result-item">
+                            <div class="result-query">🔍 Query:  ${data.query}</div>
+                            <div class="result-response">❌ ${data.response}</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="result-item error">❌ Erreur de connexion: ${error.message}</div>`;
+            }
+        }
+
+        // Permettre la recherche avec Enter
+        document.getElementById('queryInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !document.getElementById('searchBtn').disabled) {
+                performSearch();
+            }
+        });
+
+        function searchExample(query) {
+            // Récupère l'élément input de la barre de recherche
+            const searchInput = document.querySelector('.search-input');
+
+            // Met la question dans la barre de recherche
+            searchInput.value = query;
+
+            // Optionnel : met le focus sur la barre de recherche
+            searchInput.focus();
+        }
+
+
+
+
+
+</script>
+<script>
+// Variables globales
+let lastLogIndex = 0;
+let connectionAttempts = 0;
+let maxRetries = 50;
+let retryDelay = 2000;
+let isConnected = false;
+let totalDisplayedLogs = 0; // Nouveau: compteur des logs affichés
+
+// Éléments DOM - avec vérification de sécurité
+const elements = {};
+
+function initializeElements() {
+    const elementIds = [
+        'connectionStatusDot',
+        'connectionStatusText',
+        'connectionStatus',
+        'logCount',
+        'lastUpdate',
+        'logsContainer',
+        'progressFill',
+        'autoScroll'
+    ];
+
+    elementIds.forEach(id => {
+        elements[id] = document.getElementById(id);
+        if (!elements[id]) {
+            console.warn(`⚠️ Élément avec ID '${id}' non trouvé`);
+        }
+    });
+}
+
+function safeSetProperty(elementId, property, value) {
+    if (elements[elementId]) {
+        elements[elementId][property] = value;
+    } else {
+        console.warn(`⚠️ Tentative de modification de '${property}' sur élément null: ${elementId}`);
+    }
+}
+
+function safeSetText(elementId, text) {
+    if (elements[elementId]) {
+        elements[elementId].textContent = text;
+    }
+}
+
+function safeSetHTML(elementId, html) {
+    if (elements[elementId]) {
+        elements[elementId].innerHTML = html;
+    }
+}
+
+// Fonction améliorée pour ajouter les logs avec le format [timestamp] message
+function addLogEntry(timestamp, message, type = 'info', useFormattedMessage = false, formattedMessage = null) {
+    if (!elements.logsContainer) {
+        console.warn('⚠️ Container de logs non disponible');
+        return;
+    }
+
+    const logEntry = document.createElement('div');
+    logEntry.className = `log-entry log-${type}`;
+
+    // Utiliser le message formaté si disponible, sinon créer le format [timestamp] message
+    let displayMessage;
+    if (useFormattedMessage && formattedMessage) {
+        displayMessage = formattedMessage;
+    } else {
+        displayMessage = `[${timestamp}] ${message}`;
+    }
+
+    // Créer un seul élément pour tout le message formaté
+    const messageSpan = document.createElement('span');
+    messageSpan.className = 'log-message-full';
+    messageSpan.textContent = displayMessage;
+    logEntry.appendChild(messageSpan);
+
+    elements.logsContainer.appendChild(logEntry);
+
+    // Incrémenter le compteur des logs affichés
+    totalDisplayedLogs++;
+
+    // Auto-scroll si activé
+    if (elements.autoScroll && elements.autoScroll.checked) {
+        elements.logsContainer.scrollTop = elements.logsContainer.scrollHeight;
+    }
+
+    // Mettre à jour le compteur avec le nombre total
+    safeSetText('logCount', totalDisplayedLogs);
+}
+
+function updateConnectionStatus(status, message) {
+    const statusMap = {
+        'connecting': { dot: 'status-loading', text: '🔌 Connexion...' },
+        'connected': { dot: 'status-ready', text: '📡 Connecté' },
+        'error': { dot: 'status-error', text: '❌ Erreur de connexion' },
+        'loading': { dot: 'status-loading', text: '⏳ Chargement des modèles...' },
+        'ready': { dot: 'status-ready', text: '✅ Système prêt' }
+    };
+
+    const config = statusMap[status] || statusMap['error'];
+
+    if (elements.connectionStatusDot) {
+        elements.connectionStatusDot.className = `status-dot ${config.dot}`;
+    }
+
+    safeSetText('connectionStatusText', message || config.text);
+    safeSetText('connectionStatus', config.text);
+
+    // Mettre à jour la dernière mise à jour
+    const now = new Date().toLocaleTimeString();
+    safeSetText('lastUpdate', now);
+}
+
+async function verifySystemStatus() {
+    try {
+        const response = await fetch('/api/status');
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        isConnected = true;
+        connectionAttempts = 0;
+
+        // Mettre à jour le statut
+        if (data.models_loaded) {
+            updateConnectionStatus('ready', '✅ Modèles chargés et prêts');
+            safeSetProperty('progressFill', 'style.width', '100%');
+        } else if (data.models_loading) {
+            updateConnectionStatus('loading', `⏳ ${data.progress || 'Chargement...'}`);
+
+            // Estimation du progrès basée sur le message
+            let progress = 10;
+            if (data.progress && data.progress.includes('RDF2Vec')) progress = 30;
+            if (data.progress && data.progress.includes('RGCN')) progress = 60;
+            if (data.progress && data.progress.includes('embeddings')) progress = 90;
+
+            safeSetProperty('progressFill', 'style.width', `${progress}%`);
+        } else {
+            updateConnectionStatus('connecting', '🔄 Démarrage...');
+        }
+
+        // UNIQUEMENT lors du premier chargement, afficher les logs récents
+        if (totalDisplayedLogs === 0 && data.recent_logs && data.recent_logs.length > 0) {
+            data.recent_logs.forEach(log => {
+                if (log.formatted_message) {
+                    addLogEntry(log.timestamp, log.message, log.type, true, log.formatted_message);
+                } else {
+                    addLogEntry(log.timestamp, log.message, log.type);
+                }
+            });
+
+            // Mettre à jour lastLogIndex pour éviter les doublons
+            lastLogIndex = data.total_logs || 0;
+        }
+    } catch (error) {
+        isConnected = false;
+        connectionAttempts++;
+        const errorMessage = `Erreur de connexion: ${error.message}`;
+        updateConnectionStatus('error', `❌ ${errorMessage} (${connectionAttempts}/${maxRetries})`);
+
+        // Ajouter le log d'erreur
+        const now = new Date().toLocaleTimeString();
+        addLogEntry(now, errorMessage, 'error');
+
+        if (connectionAttempts >= maxRetries) {
+            addLogEntry(now, `❌ Arrêt des tentatives après ${maxRetries} essais`, 'error');
+            return;
+        }
+    }
+}
+
+async function fetchLogs() {
+    if (!isConnected) return;
+
+    try {
+        const response = await fetch(`/api/logs?since=${lastLogIndex}`);
+        if (!response.ok) return;
+
+        const data = await response.json();
+
+        // AJOUTER seulement les NOUVEAUX logs (ne pas effacer les anciens)
+        if (data.logs && data.logs.length > 0) {
+            console.log(`📥 Ajout de ${data.logs.length} nouveaux logs`);
+            data.logs.forEach(log => {
+                if (log.formatted_message) {
+                    addLogEntry(log.timestamp, log.message, log.type, true, log.formatted_message);
+                } else {
+                    addLogEntry(log.timestamp, log.message, log.type);
+                }
+            });
+
+            // Mettre à jour l'index pour la prochaine requête
+            lastLogIndex = data.total_logs;
+        }
+    } catch (error) {
+        console.warn('Erreur lors de la récupération des logs:', error);
+    }
+}
+
+// NOUVELLE fonction: Rafraîchir SANS effacer (pour le bouton refresh)
+function refreshLogsIncremental() {
+    console.log('🔄 Rafraîchissement incrémental des logs...');
+    verifySystemStatus();
+    fetchLogs();
+}
+
+// NOUVELLE fonction: Rafraîchir COMPLET (efface tout et recharge)
+function refreshLogsComplete() {
+    console.log('🔄 Rafraîchissement complet des logs...');
+    lastLogIndex = 0;
+    totalDisplayedLogs = 0;
+    if (elements.logsContainer) {
+        elements.logsContainer.innerHTML = '';
+    }
+    safeSetText('logCount', '0');
+    verifySystemStatus();
+}
+
+function clearLogs() {
+    if (elements.logsContainer) {
+        elements.logsContainer.innerHTML = '';
+    }
+    totalDisplayedLogs = 0;
+    safeSetText('logCount', '0');
+    console.log('🗑️ Logs effacés par l\'utilisateur');
+}
+
+// Initialisation quand le DOM est prêt
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Initialisation de la console de logs...');
+
+    // Initialiser les éléments DOM
+    initializeElements();
+
+    // Ajouter un log de démarrage
+    const now = new Date().toLocaleTimeString();
+    addLogEntry(now, '📡 Console de logs initialisée', 'success');
+
+    // Démarrer les vérifications périodiques
+    verifySystemStatus();
+
+    // Vérifier le statut toutes les 5 secondes (moins fréquent pour éviter spam)
+    setInterval(verifySystemStatus, 5000);
+
+    // Récupérer les nouveaux logs toutes les 2 secondes
+    setInterval(fetchLogs, 2000);
+
+    console.log('✅ Console de logs initialisée avec succès');
+});
+
+// Gestion des erreurs globales
+window.addEventListener('error', function(event) {
+    const now = new Date().toLocaleTimeString();
+    addLogEntry(now, `❌ Erreur JavaScript: ${event.message}`, 'error');
+});
+
+// Exposer les fonctions globalement pour les boutons HTML
+window.refreshLogsIncremental = refreshLogsIncremental;
+window.refreshLogsComplete = refreshLogsComplete;
+window.clearLogs = clearLogs;
+</script>
+
+</body>
+</html>
